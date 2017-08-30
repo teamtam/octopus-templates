@@ -1,14 +1,10 @@
 Param(
     [string]$WebConfigPath,
-    [string]$WebConfigEnvironmentVariableName,
-    [string]$WebConfigEnvironmentVariableValue
+    [string]$EnvironmentVariableName,
+    [string]$EnvironmentVariableValue
 )
 
-# TODO: validate path of web.config
-# [ValidateScript({Test-Path $_ -PathType Leaf})]
-# [ValidatePattern("(?i)(web\.config)$")]
-
-function Get-Parameter($Name, [switch]$Required, $Default) {
+function Get-Parameter($Name, [switch]$Required, [switch]$TestPath) {
 
     $result = $null
 
@@ -26,8 +22,12 @@ function Get-Parameter($Name, [switch]$Required, $Default) {
     if ($result -eq $null -or $result -eq "") {
         if ($Required) {
             throw "Missing parameter value $Name"
-        } else {
-            $result = $Default
+        }
+    }
+
+    if ($TestPath) {
+        if (!(Test-Path $result -PathType Leaf)) {
+            throw "Could not find $result"
         }
     }
 
@@ -37,33 +37,31 @@ function Get-Parameter($Name, [switch]$Required, $Default) {
 & {
     Param(
         [string]$WebConfigPath,
-        [string]$WebConfigEnvironmentVariableName,
-        [string]$WebConfigEnvironmentVariableValue
+        [string]$EnvironmentVariableName,
+        [string]$EnvironmentVariableValue
     )
 
-    $xml = (Get-Content $WebConfig) -as [Xml]
+    $xml = (Get-Content $WebConfigPath) -as [Xml]
     $environmentVariables = $xml.configuration.'system.webServer'.aspNetCore.environmentVariables
-    $environmentVariable = $environmentVariables.environmentVariable | Where-Object {$_.name -eq $ParameterName}
+    $environmentVariable = $environmentVariables.environmentVariable | Where-Object {$_.name -eq $EnvironmentVariableName}
 
     if ($environmentVariable) {
-        $environmentVariable.value = $ParameterValue
+        $environmentVariable.value = $EnvironmentVariableValue
     }
     elseif ($environmentVariables) {
         $environmentVariable = $xml.CreateElement("environmentVariable");
-        $environmentVariable.SetAttribute("Name", $ParameterName);
-        $environmentVariable.SetAttribute("Value", $ParameterValue);
+        $environmentVariable.SetAttribute("Name", $EnvironmentVariableName);
+        $environmentVariable.SetAttribute("Value", $EnvironmentVariableValue);
         $x = $environmentVariables.AppendChild($environmentVariable)
     }
     else {
-        Write-Error "Could not find 'configuration/system.webServer/aspNetCore/environmentVariables' element in web.config"
-        Exit 1
+        throw "Could not find 'configuration/system.webServer/aspNetCore/environmentVariables' element in web.config"
     }
 
     try {
-        $xml.Save((Resolve-Path $WebConfig))
+        $xml.Save((Resolve-Path $WebConfigPath))
     }
     catch {
-        Write-Error "Could not save web.config because: $_.Exception.Message"
-        Exit 1
+        throw "Could not save web.config because: $_.Exception.Message"
     }
-} (Get-Parameter 'WebConfigPath' -Required) (Get-Parameter 'WebConfigEnvironmentVariableName' -Required) (Get-Parameter 'WebConfigEnvironmentVariableValue' -Required)
+} (Get-Parameter 'WebConfigPath' -Required -TestPath) (Get-Parameter 'EnvironmentVariableName' -Required) (Get-Parameter 'EnvironmentVariableValue' -Required)

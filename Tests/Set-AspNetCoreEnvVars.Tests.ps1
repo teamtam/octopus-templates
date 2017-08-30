@@ -1,5 +1,14 @@
 Describe "Set-AspNetCoreEnvVars" {
 
+    Context "Parameter validation" {
+        It "Should throw exception when missing parameter" {
+            { .\Set-AspNetCoreEnvVars.ps1 "Hello" "World" } | Should Throw
+        }
+        It "Should throw exception when web.config can't be found" {
+            { .\Set-AspNetCoreEnvVars.ps1 "web.config" "Hello" "World" } | Should Throw
+        }
+    }
+
     Context "Create <environmentVariable>" {
         BeforeEach {
             Copy-Item .\Sandbox\web.config $TestDrive
@@ -34,8 +43,8 @@ Describe "Set-AspNetCoreEnvVars" {
         AfterEach {
             Remove-Item (Join-Path $TestDrive web.config)
         }
-        It "Should write to the error stream" {
-            (.\Set-AspNetCoreEnvVars.ps1 $webConfig "Hello" "World" 2>&1 | Measure-Object -Line).Lines | Should BeGreaterThan 0
+        It "Should throw exception" {
+            { .\Set-AspNetCoreEnvVars.ps1 $webConfig "Hello" "World" } | Should Throw
         }
-    }    
+    }
 }
