@@ -1,8 +1,10 @@
 Param(
-    [string]$WebConfigPath,
-    [string]$EnvironmentVariableName,
-    [string]$EnvironmentVariableValue
+    [string]$anc_WebConfigPath,
+    [string]$anc_EnvironmentVariableName,
+    [string]$anc_EnvironmentVariableValue
 )
+
+$ErrorActionPreference = "Stop"
 
 function Get-Parameter($Name, [switch]$Required, [switch]$TestPath) {
 
@@ -36,22 +38,22 @@ function Get-Parameter($Name, [switch]$Required, [switch]$TestPath) {
 
 & {
     Param(
-        [string]$WebConfigPath,
-        [string]$EnvironmentVariableName,
-        [string]$EnvironmentVariableValue
+        [string]$anc_WebConfigPath,
+        [string]$anc_EnvironmentVariableName,
+        [string]$anc_EnvironmentVariableValue
     )
 
-    $xml = (Get-Content $WebConfigPath) -as [Xml]
+    $xml = (Get-Content $anc_WebConfigPath) -as [Xml]
     $environmentVariables = $xml.configuration.'system.webServer'.aspNetCore.environmentVariables
-    $environmentVariable = $environmentVariables.environmentVariable | Where-Object {$_.name -eq $EnvironmentVariableName}
+    $environmentVariable = $environmentVariables.environmentVariable | Where-Object {$_.name -eq $anc_EnvironmentVariableName}
 
     if ($environmentVariable) {
-        $environmentVariable.value = $EnvironmentVariableValue
+        $environmentVariable.value = $anc_EnvironmentVariableValue
     }
     elseif ($environmentVariables) {
         $environmentVariable = $xml.CreateElement("environmentVariable");
-        $environmentVariable.SetAttribute("Name", $EnvironmentVariableName);
-        $environmentVariable.SetAttribute("Value", $EnvironmentVariableValue);
+        $environmentVariable.SetAttribute("Name", $anc_EnvironmentVariableName);
+        $environmentVariable.SetAttribute("Value", $anc_EnvironmentVariableValue);
         $x = $environmentVariables.AppendChild($environmentVariable)
     }
     else {
@@ -59,9 +61,9 @@ function Get-Parameter($Name, [switch]$Required, [switch]$TestPath) {
     }
 
     try {
-        $xml.Save((Resolve-Path $WebConfigPath))
+        $xml.Save((Resolve-Path $anc_WebConfigPath))
     }
     catch {
         throw "Could not save web.config because: $_.Exception.Message"
     }
-} (Get-Parameter 'WebConfigPath' -Required -TestPath) (Get-Parameter 'EnvironmentVariableName' -Required) (Get-Parameter 'EnvironmentVariableValue' -Required)
+} (Get-Parameter 'anc_WebConfigPath' -Required -TestPath) (Get-Parameter 'anc_EnvironmentVariableName' -Required) (Get-Parameter 'anc_EnvironmentVariableValue' -Required)
