@@ -66,4 +66,7 @@ function Get-Parameter($Name, [switch]$Required, [switch]$TestPath) {
     catch {
         throw "Could not save web.config because: $_.Exception.Message"
     }
-} (Get-Parameter 'anc_WebConfigPath' -Required -TestPath) (Get-Parameter 'anc_EnvironmentVariableName' -Required) (Get-Parameter 'anc_EnvironmentVariableValue' -Required)
+} `
+(Get-Parameter 'anc_WebConfigPath' -Required -TestPath) `
+(Get-Parameter 'anc_EnvironmentVariableName' -Required) `
+(Get-Parameter 'anc_EnvironmentVariableValue' -Required)
