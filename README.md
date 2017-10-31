@@ -10,7 +10,9 @@ Source code for contributions to the [Octopus Deploy Library](https://library.oc
 
 A PowerShell script to set an [ASP.NET Core runtime environment variable in a web.config file](https://docs.microsoft.com/en-us/aspnet/core/hosting/aspnet-core-module#setting-environment-variables).
 
-Web.config transforms are no longer an option in ASP.NET Core, and if you use a token substitution method to manage this, it can break your configuration locally.
+The advantage of setting an environment variable in the web.config is that not only will the scope be isolated to the runtime of the app, but it will also take precedence over corresponding ones found in IIS, user environment variables or system environment variables.
+
+In addition, web.config transforms are no longer an option for ASP.NET Core. If you use a token substitution method to manage environment variables in web.config, it will likely break your local configuration.
 
 ### Parameters
 * `anc_WebConfigPath`: The path to the web.config file, typically derived from an [output variable](https://octopus.com/docs/deploying-applications/variables/output-variables) in a previous step
